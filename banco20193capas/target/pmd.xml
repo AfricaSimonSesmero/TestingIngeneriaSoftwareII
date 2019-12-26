@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd xmlns="http://pmd.sourceforge.net/report/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/report/2.0.0 http://pmd.sourceforge.net/report_2_0_0.xsd"
+    version="6.13.0" timestamp="2019-12-26T18:06:21.172">
+<file name="/Users/sara/git/master/src/main/java/edu/uclm/esi/iso2/banco20193capas/model/Manager.java">
+<violation beginline="29" endline="31" begincolumn="22" endcolumn="60" rule="UnusedPrivateMethod" ruleset="Best Practices" package="edu.uclm.esi.iso2.banco20193capas.model" class="Manager" method="loadDAO" externalInfoUrl="https://pmd.github.io/pmd-6.13.0/pmd_rules_java_bestpractices.html#unusedprivatemethod" priority="3">
+Avoid unused private methods such as 'loadDAO(CuentaDAO,MovimientoCuentaDAO,ClienteDAO,MovimientoTarjetaCreditoDAO,TarjetaDebitoDAO,TarjetaCreditoDAO)'.
+</violation>
+</file>
+</pmd>

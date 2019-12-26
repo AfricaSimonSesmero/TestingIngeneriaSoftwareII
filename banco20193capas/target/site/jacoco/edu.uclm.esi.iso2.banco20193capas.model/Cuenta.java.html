@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Cuenta.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">banco20193capas</a> &gt; <a href="index.source.html" class="el_package">edu.uclm.esi.iso2.banco20193capas.model</a> &gt; <span class="el_source">Cuenta.java</span></div><h1>Cuenta.java</h1><pre class="source lang-java linenums">package edu.uclm.esi.iso2.banco20193capas.model;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+
+import edu.uclm.esi.iso2.banco20193capas.exceptions.ClienteNoAutorizadoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.ClienteNoEncontradoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.CuentaInvalidaException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.CuentaSinTitularesException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.CuentaYaCreadaException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.ImporteInvalidoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.SaldoInsuficienteException;
+
+/**
+* La clase {@code Cuenta} representa una cuenta bancaria, que ha de tener al menos un {@see Cliente} que sea titular.
+* 
+* 
+*/
+@Entity
+public class Cuenta {
+	@Id 
+	protected Long id;
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	private List&lt;Cliente&gt; titulares;
+	
+	private boolean creada;
+		
+<span class="fc" id="L35">	public Cuenta() {</span>
+<span class="fc" id="L36">		this.titulares=new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L37">	}</span>
+	
+	public Cuenta(Long id) {
+<span class="fc" id="L40">		this();</span>
+<span class="fc" id="L41">		this.id=id;</span>
+<span class="fc" id="L42">	}</span>
+	
+	public Cuenta(Integer id) {
+<span class="fc" id="L45">		this(new Long(id));</span>
+<span class="fc" id="L46">	}</span>
+	
+	/**
+	 * Añade un cliente a la lista de titulares de esta cuenta
+	 * @param cliente El cliente que se añade a la lista de titulares
+	 * @throws CuentaYaCreadaException Si la cuenta ya se ha almacenado en la base de datos
+	 */
+	public void addTitular(Cliente cliente) throws CuentaYaCreadaException {
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">		if (creada)</span>
+<span class="nc" id="L55">			throw new CuentaYaCreadaException();</span>
+<span class="fc" id="L56">		this.titulares.add(cliente);</span>
+<span class="fc" id="L57">	}</span>
+	
+	/**
+	 * Realiza un ingreso en la cuenta
+	 * @param importe	El importe que se ingresa
+	 * @throws ImporteInvalidoException	Si el importe es &lt;=0
+	 */
+	public void ingresar(double importe) throws ImporteInvalidoException {
+<span class="fc" id="L65">		this.ingresar(importe, &quot;Ingreso de efectivo&quot;);</span>
+<span class="fc" id="L66">	}</span>
+
+	private void ingresar(double importe, String concepto) throws ImporteInvalidoException {
+<span class="fc bfc" id="L69" title="All 2 branches covered.">		if (importe&lt;=0)</span>
+<span class="fc" id="L70">			throw new ImporteInvalidoException(importe);</span>
+<span class="fc" id="L71">		MovimientoCuenta movimiento = new MovimientoCuenta(this, importe, concepto);</span>
+<span class="fc" id="L72">		Manager.getMovimientoDAO().save(movimiento);</span>
+<span class="fc" id="L73">	}</span>
+	
+	/**
+	 * Realiza una retirada de la cuenta
+	 * @param importe	El importe que se retira
+	 * @throws ImporteInvalidoException	Si el importe es &lt;=0
+	 * @throws SaldoInsuficienteException	Si el importe&gt;getSaldo()
+	 */
+	public void retirar(double importe) throws ImporteInvalidoException, SaldoInsuficienteException {
+<span class="fc" id="L82">		this.retirar(importe, &quot;Retirada de efectivo&quot;);</span>
+<span class="fc" id="L83">	}</span>
+		
+	private void retirar(double importe, String concepto) throws ImporteInvalidoException, SaldoInsuficienteException {
+<span class="fc bfc" id="L86" title="All 2 branches covered.">		if (importe&lt;=0)</span>
+<span class="fc" id="L87">			throw new ImporteInvalidoException(importe);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">		if (importe&gt;getSaldo())</span>
+<span class="fc" id="L89">			throw new SaldoInsuficienteException();</span>
+<span class="fc" id="L90">		MovimientoCuenta movimiento = new MovimientoCuenta(this, -importe, concepto);</span>
+<span class="fc" id="L91">		Manager.getMovimientoDAO().save(movimiento);</span>
+<span class="fc" id="L92">	}</span>
+
+	/**
+	 * Retira el importe de la cuenta, incluso aunque esta no tenga saldo suficiente
+	 * @param importe	El importe que se retira
+	 * @param concepto	El concepto del movimiento
+	 */
+	public void retiroForzoso(double importe, String concepto) {
+<span class="fc" id="L100">		MovimientoCuenta movimiento = new MovimientoCuenta(this, -importe, concepto);</span>
+<span class="fc" id="L101">		Manager.getMovimientoDAO().save(movimiento);</span>
+<span class="fc" id="L102">	}</span>
+	
+	/**
+	 * Realiza una transferencia desde esta cuenta a la cuenta que se pasa como primer parámetro.
+	 * Se cobra una comisión del 1%, con un mínimo de 1.5 euros
+	 * @param numeroCuentaDestino	El id de la cuenta destino
+	 * @param importe				El importe que se transfiere
+	 * @param concepto				El concepto de la transferencia
+	 * @throws CuentaInvalidaException	Si la cuenta destino es esta misma o no existe en la BD
+	 * @throws ImporteInvalidoException	Si el importe es &lt;=0
+	 * @throws SaldoInsuficienteException	Si la cuenta no tiene saldo suficiente para afrontar el importe y la comisión
+	 */
+	public void transferir(Long numeroCuentaDestino, double importe, String concepto) throws CuentaInvalidaException, ImporteInvalidoException, SaldoInsuficienteException {
+<span class="fc bfc" id="L115" title="All 2 branches covered.">		if (this.getId().equals(numeroCuentaDestino))</span>
+<span class="fc" id="L116">			throw new CuentaInvalidaException(numeroCuentaDestino);</span>
+<span class="fc" id="L117">		this.retirar(importe, &quot;Transferencia emitida&quot;);</span>
+<span class="fc" id="L118">		double comision = Math.max(0.01*importe, 1.5);</span>
+<span class="fc" id="L119">		this.retirar(comision, &quot;Comisión por transferencia&quot;);</span>
+<span class="fc" id="L120">		Cuenta destino = this.load(numeroCuentaDestino);</span>
+<span class="fc" id="L121">		destino.ingresar(importe, &quot;Transferencia recibida&quot;);</span>
+<span class="fc" id="L122">	}</span>
+	
+	private Cuenta load(Long numero) throws CuentaInvalidaException {
+<span class="fc" id="L125">		Optional&lt;Cuenta&gt; optCuenta = Manager.getCuentaDAO().findById(numero);</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">		if (!optCuenta.isPresent())</span>
+<span class="nc" id="L127">			throw new CuentaInvalidaException(numero);</span>
+<span class="fc" id="L128">		return optCuenta.get();</span>
+	}
+
+	/**
+	 * Devuelve el saldo de la cuenta
+	 * @return	El saldo de la cuenta
+	 */
+	public double getSaldo() {
+<span class="fc" id="L136">		List&lt;MovimientoCuenta&gt; mm = Manager.getMovimientoDAO().findByCuentaId(this.id);</span>
+<span class="fc" id="L137">		double saldo = 0.0;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		for (MovimientoCuenta m : mm)</span>
+<span class="fc" id="L139">			saldo = saldo + m.getImporte();</span>
+<span class="fc" id="L140">		return saldo;</span>
+	}
+
+	/**
+	 * Inserta la cuenta en la base de datos
+	 * @throws CuentaSinTitularesException	Si no se ha asignado ningún titular a la cuenta
+	 */
+	public void insert() throws CuentaSinTitularesException {
+<span class="fc bfc" id="L148" title="All 2 branches covered.">		if (this.titulares.isEmpty())</span>
+<span class="fc" id="L149">			throw new CuentaSinTitularesException();</span>
+<span class="fc" id="L150">		this.creada = true;</span>
+<span class="fc" id="L151">		Manager.getCuentaDAO().save(this);</span>
+<span class="fc" id="L152">	}</span>
+
+	/**
+	 * Emite una tarjeta de débito asociada a esta cuenta
+	 * @param nif	NIF del cliente para el que se emite la tarjeta
+	 * @return	La tarjeta de débito (@see {@link edu.uclm.esi.iso2.banco20193capas.model.TarjetaDebito})
+	 * @throws ClienteNoEncontradoException	Si el cliente no está en la base de datos
+	 * @throws ClienteNoAutorizadoException	Si el cliente no es titular de esta cuenta
+	 */
+	public TarjetaDebito emitirTarjetaDebito(String nif) throws ClienteNoEncontradoException, ClienteNoAutorizadoException {
+<span class="fc" id="L162">		Optional&lt;Cliente&gt; optCliente = Manager.getClienteDAO().findByNif(nif);</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">		if (!optCliente.isPresent())</span>
+<span class="nc" id="L164">			throw new ClienteNoEncontradoException(nif);</span>
+<span class="fc" id="L165">		Cliente cliente = optCliente.get();</span>
+<span class="fc" id="L166">		boolean encontrado = false;</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">		for (Cliente titular : this.titulares)</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">			if (titular.getNif().equals(cliente.nif)) {</span>
+<span class="fc" id="L169">				encontrado = true;</span>
+<span class="fc" id="L170">				break;</span>
+			}
+
+<span class="fc bfc" id="L173" title="All 2 branches covered.">		if (!encontrado)</span>
+<span class="fc" id="L174">			throw new ClienteNoAutorizadoException(nif, this.id);</span>
+<span class="fc" id="L175">		TarjetaDebito tarjeta = new TarjetaDebito();</span>
+<span class="fc" id="L176">		tarjeta.setCuenta(this);</span>
+<span class="fc" id="L177">		tarjeta.setTitular(cliente);</span>
+<span class="fc" id="L178">		Manager.getTarjetaDebitoDAO().save(tarjeta);</span>
+<span class="fc" id="L179">		return tarjeta;</span>
+	}
+
+	/**
+	 * Emite una tarjeta de débito asociada a esta cuenta
+	 * @param nif	El nif del cliente para el cual se emite esta tarjeta
+	 * @param credito	El crédito concedido
+	 * @return	La tarjeta de crédito (@see {@link edu.uclm.esi.iso2.banco20193capas.model.TarjetaCredito})
+	 * @throws ClienteNoEncontradoException	Si el cliente no está en la base de datos
+	 * @throws ClienteNoAutorizadoException	Si el cliente no es titular de esta cuenta
+	 */
+	public TarjetaCredito emitirTarjetaCredito(String nif, double credito) throws ClienteNoEncontradoException, ClienteNoAutorizadoException {
+<span class="fc" id="L191">		Optional&lt;Cliente&gt; optCliente = Manager.getClienteDAO().findByNif(nif);</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">		if (!optCliente.isPresent())</span>
+<span class="nc" id="L193">			throw new ClienteNoEncontradoException(nif);</span>
+<span class="fc" id="L194">		Cliente cliente = optCliente.get();</span>
+<span class="fc" id="L195">		boolean encontrado = false;</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">		for (Cliente titular : this.titulares)</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">			if (titular.getNif().equals(cliente.nif)) {</span>
+<span class="fc" id="L198">				encontrado = true;</span>
+<span class="fc" id="L199">				break;</span>
+			}
+<span class="fc bfc" id="L201" title="All 2 branches covered.">		if (!encontrado)</span>
+<span class="fc" id="L202">			throw new ClienteNoAutorizadoException(nif, this.id);</span>
+<span class="fc" id="L203">		TarjetaCredito tarjeta = new TarjetaCredito();</span>
+<span class="fc" id="L204">		tarjeta.setCuenta(this);</span>
+<span class="fc" id="L205">		tarjeta.setTitular(cliente);</span>
+<span class="fc" id="L206">		tarjeta.setCredito(credito);</span>
+<span class="fc" id="L207">		Manager.getTarjetaCreditoDAO().save(tarjeta);</span>
+<span class="fc" id="L208">		return tarjeta;</span>
+	}
+
+	public Long getId() {
+<span class="fc" id="L212">		return id;</span>
+	}
+
+	public void setId(Long id) {
+<span class="nc" id="L216">		this.id = id;</span>
+<span class="nc" id="L217">	}</span>
+
+	public List&lt;Cliente&gt; getTitulares() {
+<span class="nc" id="L220">		return titulares;</span>
+	}
+
+	public void setTitulares(List&lt;Cliente&gt; titulares) {
+<span class="nc" id="L224">		this.titulares = titulares;</span>
+<span class="nc" id="L225">	}</span>
+
+	public boolean isCreada() {
+<span class="nc" id="L228">		return creada;</span>
+	}
+
+	public void setCreada(boolean creada) {
+<span class="nc" id="L232">		this.creada = creada;</span>
+<span class="nc" id="L233">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>

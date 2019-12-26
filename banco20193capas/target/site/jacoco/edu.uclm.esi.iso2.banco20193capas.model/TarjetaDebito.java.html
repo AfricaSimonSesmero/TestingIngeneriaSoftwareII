@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TarjetaDebito.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">banco20193capas</a> &gt; <a href="index.source.html" class="el_package">edu.uclm.esi.iso2.banco20193capas.model</a> &gt; <span class="el_source">TarjetaDebito.java</span></div><h1>TarjetaDebito.java</h1><pre class="source lang-java linenums">package edu.uclm.esi.iso2.banco20193capas.model;
+
+import java.security.SecureRandom;
+
+import javax.persistence.Entity;
+
+import edu.uclm.esi.iso2.banco20193capas.exceptions.ImporteInvalidoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.PinInvalidoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.SaldoInsuficienteException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.TarjetaBloqueadaException;
+
+@Entity
+<span class="fc" id="L13">public class TarjetaDebito extends Tarjeta {</span>
+
+	/**
+	 * Permite sacar dinero del cajero automático
+	 * @param pin	El pin que introduce el usuario
+	 * @param importe	El {@code importe} que desea sacar
+	 * @throws ImporteInvalidoException	Si el {@code importe&lt;=0}
+	 * @throws SaldoInsuficienteException	Si el saldo de la cuenta asociada ({@link edu.uclm.esi.iso2.banco20193capas.model.Cuenta#getSaldo() Cuenta.getSaldo()}) a la tarjeta es menor que el importe
+	 * @throws TarjetaBloqueadaException	Si la tarjeta está bloqueada
+	 * @throws PinInvalidoException	Si el pin introducido es distinto del pin de la tarjeta
+	 */
+	@Override
+	public void sacarDinero(int pin, double importe) throws ImporteInvalidoException, SaldoInsuficienteException, TarjetaBloqueadaException, PinInvalidoException {
+<span class="fc" id="L26">		comprobar(pin);</span>
+<span class="fc" id="L27">		this.intentos = 0;</span>
+<span class="nc" id="L28">		this.cuenta.retirar(importe);</span>
+<span class="nc" id="L29">	}</span>
+
+	/**
+	 * Inicia una compra por Internet, que debe confirmarse después (ver {@link #confirmarCompraPorInternet(int)}) mediante el token que devuelve este método
+	 * @param pin	El pin que introduce el usuario
+	 * @param importe	El importe de la compra
+	 * @return	Un token que debe introducirse en {@link #confirmarCompraPorInternet(int)}
+	 * @throws TarjetaBloqueadaException	Si la tarjeta está bloqueada
+	 * @throws PinInvalidoException	Si el pin introducido es distinto del pin de la tarjeta
+	 * @throws SaldoInsuficienteException	Si el saldo de la cuenta asociada a la tarjeta es menor que el importe 
+	 * @throws ImporteInvalidoException	Si el importe&lt;=0
+	 */
+	@Override
+	public Integer comprarPorInternet(int pin, double importe) throws TarjetaBloqueadaException, PinInvalidoException, SaldoInsuficienteException, ImporteInvalidoException {
+<span class="fc" id="L43">		comprobar(pin);</span>
+<span class="fc" id="L44">		this.intentos = 0;</span>
+<span class="fc" id="L45">		SecureRandom dado = new SecureRandom();</span>
+<span class="fc" id="L46">		int token = 0;</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">		for (int i=0; i&lt;=3; i++)</span>
+<span class="fc" id="L48">			token = (int) (token + dado.nextInt(10) * Math.pow(10, i));</span>
+<span class="fc" id="L49">		token =  1234;</span>
+<span class="fc" id="L50">		this.compra = new Compra(importe, token);</span>
+<span class="fc" id="L51">		return token;</span>
+	}
+	
+	/**
+	 * Permite hacer un compra en un comercio
+	 * @param pin	El pin que introduce el usuario
+	 * @param importe	El importe de la compra
+	 * @throws ImporteInvalidoException	Si el importe&lt;=0
+	 * @throws SaldoInsuficienteException	Si el saldo de la cuenta asociada ({@link Cuenta#getSaldo()}) a la tarjeta es menor que el importe 
+	 * @throws TarjetaBloqueadaException	Si la tarjeta está bloqueada
+	 * @throws PinInvalidoException	Si el pin introducido es incorrecto
+	 */
+	@Override
+	public void comprar(int pin, double importe) throws ImporteInvalidoException, SaldoInsuficienteException, TarjetaBloqueadaException, PinInvalidoException {
+<span class="fc" id="L65">		comprobar(pin);</span>
+<span class="fc" id="L66">		this.intentos = 0;</span>
+<span class="fc" id="L67">		this.cuenta.retirar(importe);</span>
+<span class="fc" id="L68">	}</span>
+
+	@Override
+	protected void bloquear() {
+<span class="fc" id="L72">		this.activa = false;</span>
+<span class="fc" id="L73">		Manager.getTarjetaDebitoDAO().save(this);</span>
+<span class="fc" id="L74">	}</span>
+	
+	@Override
+	public void cambiarPin(int pinViejo, int pinNuevo) throws PinInvalidoException {
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if (this.pin!=pinViejo)</span>
+<span class="fc" id="L79">			throw new PinInvalidoException();</span>
+<span class="fc" id="L80">		this.pin = pinNuevo;</span>
+<span class="fc" id="L81">		Manager.getTarjetaDebitoDAO().save(this);</span>
+<span class="fc" id="L82">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
