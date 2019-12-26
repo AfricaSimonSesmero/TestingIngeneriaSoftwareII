@@ -303,7 +303,7 @@ public class TestCuentaConFixtures extends TestCase {
 	public void testComprarInternetTCNoAutorizado(){
 	
 		try {
-			TarjetaCredito tcreditoPepe = cuentaPepe.emitirTarjetaCredito("98765F", 1000);
+			TarjetaDebito tcreditoPepe = cuentaPepe.emitirTarjetaDebito("98765F");
 			int token = tcreditoPepe.comprarPorInternet(tcreditoPepe.getPin(), 1);
 			fail("Se esperaba ClienteNoAutorizadoException");
 		} catch(ClienteNoAutorizadoException e){
