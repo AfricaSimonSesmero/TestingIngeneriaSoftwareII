@@ -26,16 +26,16 @@ public class Manager {
 	private Manager() {	}
 	
 	@Autowired
-//	private static void loadDAO(CuentaDAO cuentaDao, MovimientoCuentaDAO movimientoDao, 
-//			ClienteDAO clienteDAO, MovimientoTarjetaCreditoDAO movimientoTCDAO, TarjetaDebitoDAO tarjetaDebitoDAO,
-//			TarjetaCreditoDAO tarjetaCreditoDAO) {
-//		Manager.cuentaDAO = cuentaDao;
-//		Manager.movimientoDAO = movimientoDao;
-//	    Manager.clienteDAO = clienteDAO;
-//		Manager.movimientoTarjetaCreditoDAO = movimientoTCDAO;
-//		Manager.tarjetaDebitoDAO = tarjetaDebitoDAO;
-//		Manager.tarjetaCreditoDAO = tarjetaCreditoDAO;
-//	}
+	private void loadDAO(CuentaDAO cuentaDao, MovimientoCuentaDAO movimientoDao, 
+			ClienteDAO clienteDAO, MovimientoTarjetaCreditoDAO movimientoTCDAO, TarjetaDebitoDAO tarjetaDebitoDAO,
+			TarjetaCreditoDAO tarjetaCreditoDAO) {
+		Manager.cuentaDAO = cuentaDao;
+		Manager.movimientoDAO = movimientoDao;
+	    Manager.clienteDAO = clienteDAO;
+		Manager.movimientoTarjetaCreditoDAO = movimientoTCDAO;
+		Manager.tarjetaDebitoDAO = tarjetaDebitoDAO;
+		Manager.tarjetaCreditoDAO = tarjetaCreditoDAO;
+	}
 	
 	public static CuentaDAO getCuentaDAO() {
 		return cuentaDAO;
