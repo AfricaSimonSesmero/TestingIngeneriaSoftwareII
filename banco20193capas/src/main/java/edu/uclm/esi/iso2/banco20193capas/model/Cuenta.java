@@ -42,7 +42,7 @@ public class Cuenta {
 	}
 	
 	public Cuenta(Integer id) {
-		this(new Long(id));
+		this(Long.valueOf(id));
 	}
 	
 	/**
@@ -165,7 +165,7 @@ public class Cuenta {
 		Cliente cliente = optCliente.get();
 		boolean encontrado = false;
 		for (Cliente titular : this.titulares)
-			if (titular.getNif().equals(cliente.nif)) {
+			if (titular.getNif().equals(cliente.getNif())) {
 				encontrado = true;
 				break;
 			}
@@ -194,7 +194,7 @@ public class Cuenta {
 		Cliente cliente = optCliente.get();
 		boolean encontrado = false;
 		for (Cliente titular : this.titulares)
-			if (titular.getNif().equals(cliente.nif)) {
+			if (titular.getNif().equals(cliente.getNif())) {
 				encontrado = true;
 				break;
 			}
